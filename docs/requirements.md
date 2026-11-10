@@ -166,6 +166,7 @@ mozaic-creator/
 ├── docs/
 │   └── requirements.md
 ├── .nojekyll          … GitHub Pages で Jekyll の処理を無効にする
+├── LICENSE          … MIT License
 └── README.md
 ```
 

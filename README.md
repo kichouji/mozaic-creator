@@ -22,21 +22,6 @@
 
 範囲を選択した状態でツールバーの設定を変えると、その範囲に反映されます。
 
-## ローカルでの確認
+## ライセンス
 
-ES Modules を使っているため、`index.html` を直接開くのではなく、ローカルサーバー経由で開いてください。
-
-```sh
-python3 -m http.server 8000
-# http://localhost:8000/ を開く
-```
-
-## GitHub Pages での公開
-
-1. リポジトリを GitHub に push する
-2. リポジトリの Settings → Pages を開く
-3. Source を「Deploy from a branch」、Branch を `main` / `/ (root)` にして保存する
-
-## ドキュメント
-
-- [要件定義書](docs/requirements.md)
+[MIT License](LICENSE)
