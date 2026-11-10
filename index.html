@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mosaic Creator</title>
+  <meta name="description" content="画像の指定した範囲にモザイクを掛けてPNGで保存できるツール。処理はすべてブラウザ内で行われます。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Crect x='7' y='7' width='8' height='8' fill='%23fff'/%3E%3Crect x='17' y='17' width='8' height='8' fill='%23fff'/%3E%3Crect x='17' y='7' width='8' height='8' fill='%23fff' opacity='.5'/%3E%3Crect x='7' y='17' width='8' height='8' fill='%23fff' opacity='.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect x="7" y="7" width="8" height="8"/><rect x="17" y="17" width="8" height="8"/><rect x="17" y="7" width="8" height="8" opacity=".5"/><rect x="7" y="17" width="8" height="8" opacity=".5"/></svg>
+      </span>
+      <span class="brand-name">Mosaic Creator</span>
+    </div>
+    <div class="header-actions">
+      <span class="privacy-note">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        画像はブラウザ内で処理され、外部に送信されません
+      </span>
+      <button type="button" class="btn btn-secondary" data-open-file>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+        画像を開く
+      </button>
+      <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="workspace" aria-label="編集エリア">
+      <div class="toolbar" role="toolbar" aria-label="モザイクの設定">
+        <div class="tool-group">
+          <span class="tool-label">種類</span>
+          <div class="segmented" role="radiogroup" aria-label="モザイクの種類">
+            <label><input type="radio" name="mosaic-type" value="block" checked><span>ブロック</span></label>
+            <label><input type="radio" name="mosaic-type" value="gray"><span>グレー</span></label>
+          </div>
+        </div>
+        <div class="tool-divider" aria-hidden="true"></div>
+        <div class="tool-group" id="block-settings">
+          <label class="tool-label" for="block-size">粗さ</label>
+          <input type="range" id="block-size" min="4" max="64" step="1" value="16">
+          <output id="block-size-value" class="tool-value" for="block-size">16px</output>
+        </div>
+        <div class="tool-group" id="gray-settings" hidden>
+          <span class="tool-label">濃さ</span>
+          <div class="segmented" role="radiogroup" aria-label="グレーの濃さ">
+            <label><input type="radio" name="gray-level" value="dark"><span><i class="dot" style="--c:#505050"></i>濃</span></label>
+            <label><input type="radio" name="gray-level" value="mid" checked><span><i class="dot" style="--c:#808080"></i>中</span></label>
+            <label><input type="radio" name="gray-level" value="light"><span><i class="dot" style="--c:#b0b0b0"></i>淡</span></label>
+          </div>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <div class="tool-group">
+          <button type="button" class="icon-btn" id="undo-button" title="元に戻す (Ctrl+Z)" aria-label="元に戻す" disabled>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          </button>
+          <button type="button" class="icon-btn" id="redo-button" title="やり直し (Ctrl+Y)" aria-label="やり直し" disabled>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+          </div>
+          <h2>画像をドラッグ＆ドロップ</h2>
+          <p>または <kbd>Ctrl</kbd> + <kbd>V</kbd> で貼り付け</p>
+          <button type="button" class="btn btn-primary" data-open-file>ファイルを選択</button>
+          <p class="empty-formats">PNG / JPEG / WebP / GIF</p>
+        </div>
+        <canvas id="canvas" hidden></canvas>
+      </div>
+
+      <footer class="statusbar">
+        <span id="status-file">画像が読み込まれていません</span>
+        <span id="status-hint"></span>
+      </footer>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>範囲</h2>
+          <span class="badge" id="region-count">0</span>
+        </div>
+        <ul class="region-list" id="region-list"></ul>
+        <p class="region-empty" id="region-empty">画像上をドラッグして<br>モザイクを掛ける範囲を追加します</p>
+        <button type="button" class="btn btn-ghost btn-danger-ghost btn-block" id="clear-button" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg>
+          すべて削除
+        </button>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h2>書き出し</h2></div>
+        <div class="export-actions">
+          <button type="button" class="btn btn-primary btn-block" id="save-button" disabled>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            PNGで保存
+          </button>
+          <button type="button" class="btn btn-secondary btn-block" id="copy-button" disabled>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            クリップボードにコピー
+          </button>
+        </div>
+        <p class="panel-note">元画像と同じ解像度で書き出します</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h2>ショートカット</h2></div>
+        <dl class="shortcuts">
+          <dt><kbd>Ctrl</kbd>+<kbd>V</kbd></dt><dd>画像を貼り付け</dd>
+          <dt><kbd>Ctrl</kbd>+<kbd>Z</kbd></dt><dd>元に戻す</dd>
+          <dt><kbd>Ctrl</kbd>+<kbd>Y</kbd></dt><dd>やり直し</dd>
+          <dt><kbd>Delete</kbd></dt><dd>選択中の範囲を削除</dd>
+          <dt><kbd>Esc</kbd></dt><dd>選択を解除</dd>
+          <dt><kbd>Ctrl</kbd>+<kbd>S</kbd></dt><dd>PNGで保存</dd>
+        </dl>
+      </section>
+    </aside>
+  </main>
+
+  <div class="drop-overlay" id="drop-overlay" hidden>
+    <div class="drop-card">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+      ここにドロップして読み込む
+    </div>
+  </div>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="btn btn-secondary">キャンセル</button>
+        <button type="submit" value="ok" class="btn btn-primary" id="confirm-ok">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+</body>
+</html>
